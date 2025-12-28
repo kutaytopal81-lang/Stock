@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Stok Takip</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+body { font-family: Arial; padding: 15px; }
+h2 { margin-top: 25px; }
+input, select, button { padding: 8px; margin: 5px 0; width: 100%; }
+.box { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+</style>
+</head>
+<body>
+
+<h1>📦 Stok Takip</h1>
+
+<div class="box">
+<h2>📊 Stok</h2>
+<ul id="stok"></ul>
+</div>
+
+<div class="box">
+<h2>➕ Satış Ekle</h2>
+<input id="isim" placeholder="İsim">
+<select id="urun">
+<option value="mango">Mango</option>
+<option value="kent">Kent</option>
+<option value="milano">Milano</option>
+<option value="karpuz">Karpuz</option>
+<option value="elma">Elma</option>
+</select>
+<input id="adet" type="number" placeholder="Adet">
+<button onclick="satisEkle()">Satış Ekle</button>
+</div>
+
+<div class="box">
+<h2>📜 Geçmiş Satışlar</h2>
+<ul id="gecmis"></ul>
+</div>
+
+<script>
+// 🔥 FIREBASE CONFIG (BURAYI DOLDUR)
+const firebaseConfig = {
+  apiKey: "AIzaSyB_QzlNVxwqUOu8UzEZvWKef-18KopauGc",
+  authDomain: "stok-59023.firebaseapp.com",
+  projectId: "stok-59023"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const stokRef = db.collection("state").doc("stok");
+const satisRef = db.collection("satislar");
+
+// İlk stok (yoksa oluşturur)
+stokRef.get().then(d=>{
+if(!d.exists){
+stokRef.set({
+mango:23, kent:6, milano:5, karpuz:5, elma:6
+});
+}
+});
+
+stokRef.onSnapshot(doc=>{
+const s = doc.data();
+stok.innerHTML = `
+<li>Mango: ${s.mango}</li>
+<li>Kent: ${s.kent}</li>
+<li>Milano: ${s.milano}</li>
+<li>Karpuz: ${s.karpuz}</li>
+<li>Elma: ${s.elma}</li>
+`;
+});
+
+satisRef.orderBy("time","desc").onSnapshot(snap=>{
+gecmis.innerHTML="";
+snap.forEach(d=>{
+const x=d.data();
+gecmis.innerHTML+=`<li>${x.isim} - ${x.adet} ${x.urun}</li>`;
+});
+});
+
+function satisEkle(){
+const isim=isim.value;
+const urun=urun.value;
+const adet=parseInt(adet.value);
+
+stokRef.update({
+[urun]: firebase.firestore.FieldValue.increment(-adet)
+});
+
+satisRef.add({
+isim, urun, adet, time: firebase.firestore.FieldValue.serverTimestamp()
+});
+}
+</script>
+
+</body>
+</html>
